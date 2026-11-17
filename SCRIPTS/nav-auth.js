@@ -14,7 +14,7 @@
     }
 
     function currentPage() {
-        return location.pathname.split('/').pop() || 'index_1.html';
+        return location.pathname.split('/').pop() || 'index.html';
     }
 
     // Oldalvédelem és átirányítás
@@ -34,7 +34,7 @@
     function logout() {
         localStorage.removeItem('loggedInUser');
         localStorage.removeItem('loggedInRole');
-        location.replace('index_1.html');
+        location.replace('index.html');
     }
 
     // Menü: a saját szerepkör linkje a belső oldalra mutat + Kilépés gomb
