@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tanári Felület - Statisztika feladatok, feladatsorok</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="STYLE/style.css">
+
+    <script src="SCRIPTS/nav-auth.js"></script>
+
+    <!-- MathJax konfig -->
+    <script>
+                                window.MathJax = {
+                                    tex: {
+                                        inlineMath: [['$', '$'], ['\\(', '\\)']]
+                                    }
+                                };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+
+    <!-- pdf scr -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="menu">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index_1.html">Főoldal</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="altanar.html">Tanári felület</a></li>
+                    <li class="nav-item"><a class="nav-link" href="diak.html">Diák felület</a></li>
+                    <li class="nav-item"><a class="nav-link" href="kapcsolat.html">Kapcsolat</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-5">
+        <h1 class="mb-4">Tanári felület: Feladatok és feladatsorok készítése, megoldások levezetése</h1>
+
+        <div class="card shadow-sm p-4 mb-5">
+            <h3 class="mb-3">Új feladat készítése</h3>
+            <div id="taskAlert" class="alert d-none" role="alert"></div>
+
+            <form id="taskForm">
+                <div class="mb-3">
+                    <label for="taskTitle" class="form-label fw-bold mb-2">Feladat címe</label>
+                    <input type="text" class="form-control" id="taskTitle" placeholder="Pl.: Hőmérsékleti statisztika" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="taskDescription" class="form-label fw-bold mb-2">Feladat leírása</label>
+
+                    <!-- Speciális karakterek, MathJaxhez értelmezve -->
+                    <div class="btn-toolbar mb-2 gap-1" role="toolbar" aria-label="Statisztikai speciális karakterek">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Alap statisztika">
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor(' $\\overline{x}$ ')" title="Átlag (x vonallal)">x̄</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor(' Mo ')" title="Módusz jelölése">Mo</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor(' Me ')" title="Medián jelölése">Me</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor(' $\\sigma$ ')" title="Szórás (szigma)">σ</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor(' $\\sum$ ')" title="Összegzés (szumma)">Σ</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor(' N ')" title="Elemszám">N</button>
+                        </div>
+
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Formázás és indexek">
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor(' ^{2} ')" title="Négyzet (felső index)">x²</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor(' _{i} ')" title="Alsó index (i)">xᵢ</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor(' $\\frac{a}{b}$ ')" title="Tört">a/b</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor(' $\\sqrt{x}$ ')" title="Négyzetgyök">√</button>
+                        </div>
+
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Jelek és mértékegységek">
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor(' $\\le$ ')" title="Kisebb vagy egyenlő">≤</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor(' $\\ge$ ')" title="Nagyobb vagy egyenlő">≥</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor(' $\\approx$ ')" title="Közelítőleg egyenlő">≈</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor(' \\cdot ')" title="Szorzás pont">·</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertAtCursor(' % ')" title="Százalék">%</button>
+                        </div>
+                    </div>
+                    <textarea class="form-control" id="taskDescription" rows="3" placeholder="A feladat szövege... (Kulcsszavak: átlag, módusz, medián, szórás, terjedelem)" required></textarea>
+                </div>
+
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="useTableToggle" checked onchange="toggleTableAndChart()">
+                    <label class="form-check-label fw-bold" for="useTableToggle">A feladat készítéséhez szükséges táblázat és diagram</label>
+                </div>
+
+                <!-- Táblázatszerkesztő -->
+                <div class="card p-3 bg-light mb-3">
+                    <label class="form-label fw-bold mb-2">Adatsor táblázat szerkesztése</label>
+                    <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                        <div class="input-group input-group-sm" style="width: 160px;">
+                            <span class="input-group-text">Kezdeti sorok</span>
+                            <input type="number" id="tableRows" class="form-control" value="1" min="1" max="15">
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="generateTableEditor()">Táblázat generálása</button>
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="addTableRow()">+ Új sor hozzáadása</button>
+                    </div>
+
+                    <div id="tableEditorContainer" class="table-responsive bg-white p-2 border rounded d-none">
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Érték / Intervallum</th>
+                                    <th>Gyakoriság (db)</th>
+                                    <th style="width: 70px;" class="text-center">Törlés</th>
+                                </tr>
+                            </thead>
+                            <tbody id="editableTableGrid">
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Adatsor: táblázat nélküli feladatokhoz (a megoldás kiszámításához) -->
+                <div class="card p-3 bg-light mb-3 d-none" id="dataSeriesCard">
+                    <label for="dataSeries" class="form-label fw-bold mb-2">Adatsor a megoldás generálásához</label>
+                    <input type="text" class="form-control" id="dataSeries" placeholder="Pl.: 3, 5, 5, 7, 10, 12">
+                    <div class="form-text">Az adatokat szóközzel, pontosvesszővel vagy vesszővel válaszd el (tizedesvessző is használható, pl. 2,5; 3,5). Ez a mező csak a megoldás kiszámításához kell, a feladat szövegébe az adatokat te írd be.</div>
+                </div>
+
+                <!-- Megoldás / Levezetés sorok -->
+                <div class="card p-3 bg-light mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label fw-bold mb-0">Kidolgozott megoldás</label>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="generateAutomatedSolution()">Megoldás</button>
+                    </div>
+                    <textarea class="form-control" id="taskSolution" rows="4" placeholder="Kattints a 'Megoldás' gombra..."></textarea>
+                </div>
+
+                <!-- Diagram beállítások -->
+                <div class="card p-3 bg-light mb-3 d-none" id="chartCard">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <label class="form-label fw-bold mb-0">Statisztikai diagram</label>
+                        <div class="input-group input-group-sm" style="width: 200px;">
+                            <span class="input-group-text">Típus</span>
+                            <select id="chartTypeSelect" class="form-select form-select-sm" onchange="updateChart()">
+                                <option value="bar">Oszlopdiagram</option>
+                                <option value="line">Vonaldiagram</option>
+                                <option value="pie">Kördiagram</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="max-width: 450px; margin: auto;">
+                        <canvas id="taskChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Előnézet -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold mb-2">Feladat előnézete:</label>
+                    <div class="card p-3 bg-light" id="mathPreview" style="min-height: 80px;">
+                        <span class="text-muted fst-italic">A feladat, táblázat, diagram,megoldás itt jelenik meg...</span>
+                    </div>
+                </div>
+
+                <!-- Gombok -->
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-primary">Feladat mentése adatbázisba</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card shadow-sm p-4 mb-5">
+            <h3 class="mb-3">Mentett feladatok és megoldások (letöltési lista)</h3>
+            <p class="text-muted small">Itt jelennek meg a "Feladat mentése" gombbal elmentett feladatok. A diákok a saját felületükön ugyanezt a listát látják.</p>
+            <div class="list-group" id="taskDownloadList" data-can-delete="true"></div>
+        </div>
+
+        <div class="card shadow-sm p-4 mb-5" style="transform: none;">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <h3 class="mb-0">Beérkezett üzenetek <span class="badge bg-danger d-none" id="msgUnread"></span></h3>
+                <div class="input-group input-group-sm" style="width: 320px; max-width: 100%;">
+                    <span class="input-group-text">Rendezés</span>
+                    <select id="msgSort" class="form-select form-select-sm">
+                        <option value="date-desc">Dátum (legújabb elöl)</option>
+                        <option value="date-asc">Dátum (legrégebbi elöl)</option>
+                        <option value="name-asc">Név (A–Z)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="list-group" id="messageList"></div>
+        </div>
+    </main>
+
+    <script src="SCRIPTS/pdf-tasks.js"></script>
+    <script src="SCRIPTS/messages.js"></script>
+
+    <!-- JavaScript logika -->
+    <script>
+            let myChart = null;
+
+            function toggleTableAndChart() {
+                const isChecked = document.getElementById('useTableToggle').checked;
+                const tableCard = document.getElementById('tableEditorContainer').closest('.card');
+                const chartCard = document.getElementById('chartCard');
+
+                if (isChecked) {
+                    tableCard.classList.remove('d-none');
+                    // Csak akkor mutatjuk a diagram kártyát is, ha már van generálva táblázat
+                    if (document.getElementById('editableTableGrid').querySelectorAll('tr').length > 0) {
+                        chartCard.classList.remove('d-none');
+                    }
+                } else {
+                    tableCard.classList.add('d-none');
+                    chartCard.classList.add('d-none');
+                }
+                document.getElementById('dataSeriesCard').classList.toggle('d-none', isChecked);
+                updatePreview();
+            }
+
+            // (PDF-exportok lent, a script végén)
+            function insertAtCursor(text) {
+                const textarea = document.getElementById('taskDescription');
+                const startPos = textarea.selectionStart;
+                const endPos = textarea.selectionEnd;
+
+                textarea.value = textarea.value.substring(0, startPos) + text + textarea.value.substring(endPos, textarea.value.length);
+                textarea.focus();
+                textarea.setSelectionRange(startPos + text.length, startPos + text.length);
+                updatePreview();
+            }
+
+            function generateTableEditor() {
+                const rows = parseInt(document.getElementById('tableRows').value) || 1;
+                const tbody = document.getElementById('editableTableGrid');
+                const wrapper = document.getElementById('tableEditorContainer');
+                const chartCard = document.getElementById('chartCard');
+
+                tbody.innerHTML = '';
+                for (let r = 0; r < rows; r++) {
+                    appendRow(tbody, '', '');
+                }
+
+                wrapper.classList.remove('d-none');
+                chartCard.classList.remove('d-none');
+                updatePreview();
+            }
+
+            function addTableRow() {
+                const tbody = document.getElementById('editableTableGrid');
+                const wrapper = document.getElementById('tableEditorContainer');
+                const chartCard = document.getElementById('chartCard');
+
+                if (!tbody) return;
+                appendRow(tbody, '', '');
+                wrapper.classList.remove('d-none');
+                chartCard.classList.remove('d-none');
+            }
+
+            function appendRow(tbody, val1, val2) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="text" class="form-control form-control-sm" value="${val1}" placeholder="Pl. 150-160" oninput="updatePreview()"></td>
+                    <td><input type="number" class="form-control form-control-sm" value="${val2}" placeholder="db" oninput="updatePreview()"></td>
+                    <td class="text-center align-middle">
+                        <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" onclick="deleteTableRow(this)" title="Sor törlése">×</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                updatePreview();
+            }
+
+            function deleteTableRow(btn) {
+                const tr = btn.closest('tr');
+                tr.remove();
+                updatePreview();
+            }
+
+            function getTableHtmlFromInputs() {
+                const tbody = document.getElementById('editableTableGrid');
+                if (!tbody) return '';
+                const rows = tbody.querySelectorAll('tr');
+                if (rows.length === 0) return '';
+
+                let html = '<table class="table table-bordered bg-white my-3">\n  <thead>\n    <tr>\n';
+                html += '      <th>Érték / Intervallum</th>\n';
+                html += '      <th>Gyakoriság (db)</th>\n';
+                html += '    </tr>\n  </thead>\n  <tbody>\n';
+
+                rows.forEach(tr => {
+                    const inputs = tr.querySelectorAll('input');
+                    if (inputs.length >= 2) {
+                        html += `    <tr>\n      <td>${inputs[0].value}</td>\n      <td>${inputs[1].value}</td>\n    </tr>\n`;
+                    }
+                });
+                html += '  </tbody>\n</table>';
+                return html;
+            }
+
+            // AUTOMATIKUS MEGOLDÁS GENERÁLÁS (Egyszerű átlag és kulcsszavas szűrés)
+// Az adatsor mező értékeinek beolvasása: elválasztó a szóköz, a pontosvessző és a vessző;
+// egyetlen vessző egy számon belül tizedesvessző (2,5), több vessző esetén elválasztó (3,5,5,7).
+function parseDataSeries(text) {
+    const tokens = [];
+    text.trim().split(/[;\s]+/).forEach(chunk => {
+        if (!chunk) return;
+        const commas = (chunk.match(/,/g) || []).length;
+        if (commas > 1) {
+            chunk.split(',').forEach(t => { if (t !== '') tokens.push(t); });
+        } else {
+            tokens.push(chunk.replace(/,$/, ''));
+        }
+    });
+    const values = [];
+    for (const t of tokens) {
+        if (!/^-?\d+([.,]\d+)?$/.test(t)) return { error: 'Az adatsorban érvénytelen érték: "' + t + '"' };
+        values.push(parseFloat(t.replace(',', '.')));
+    }
+    return { values: values };
+}
+
+function generateAutomatedSolution() {
+    const taskText = document.getElementById('taskDescription').value.toLowerCase();
+    const useTable = document.getElementById('useTableToggle').checked;
+    let sourceText = 'A táblázat';
+
+    let freqMap = {};
+    let sumX = 0;
+    let count = 0;
+
+    if (useTable) {
+        // Adatforrás: a táblázat
+        const tbody = document.getElementById('editableTableGrid');
+        if (!tbody) {
+            alert('Előbb generálj táblázatot és add meg az adatokat!');
+            return;
+        }
+        const rows = tbody.querySelectorAll('tr');
+        if (rows.length === 0) {
+            alert('Nincsenek adatok a táblázatban! Generálj táblázatot, vagy kapcsold ki a táblázatot, és adj meg adatsort.');
+            return;
+        }
+
+        // Az azonos értékek automatikus összevonása (ha külön sorokban adták meg őket)
+        rows.forEach(tr => {
+            const inputs = tr.querySelectorAll('input');
+            if (inputs.length >= 2) {
+                let rawX = inputs[0].value.trim();
+                let f = parseFloat(inputs[1].value) || 1;
+
+                if (rawX !== '') {
+                    let x = parseFloat(rawX) || 0;
+                    freqMap[rawX] = (freqMap[rawX] || { val: x, freq: 0 });
+                    freqMap[rawX].freq += f; // Gyakoriságok összeadása azonos érték esetén
+                }
+            }
+        });
+    } else {
+        // Adatforrás: az "Adatsor" mező (táblázat nélküli feladatnál)
+        sourceText = 'Az adatsor';
+        const raw = document.getElementById('dataSeries').value;
+        if (raw.trim() === '') {
+            alert('Ehhez a táblázat nélküli feladathoz írd be az adatsort az "Adatsor" mezőbe (pl. 3, 5, 5, 7), vagy írd be a megoldást kézzel a megoldás mezőbe.');
+            return;
+        }
+        const parsed = parseDataSeries(raw);
+        if (parsed.error) {
+            alert(parsed.error);
+            return;
+        }
+        parsed.values.forEach(v => {
+            const key = String(v);
+            freqMap[key] = freqMap[key] || { val: v, freq: 0 };
+            freqMap[key].freq += 1;
+        });
+    }
+
+    let maxFreq = 0;
+    let modeList = [];
+    let expandedPoints = [];
+
+    for (let key in freqMap) {
+        let item = freqMap[key];
+        sumX += item.val * item.freq;
+        count += item.freq;
+
+        for (let i = 0; i < item.freq; i++) {
+            expandedPoints.push(item.val);
+        }
+
+        if (item.freq > maxFreq) {
+            maxFreq = item.freq;
+            modeList = [key];
+        } else if (item.freq === maxFreq && !modeList.includes(key)) {
+            modeList.push(key);
+        }
+    }
+
+    if (count === 0) {
+        alert('Hiányzó adatok!');
+        return;
+    }
+
+    let mean = sumX / count;
+
+    // Mediánhoz növekvő sorrendbe rendezés
+    expandedPoints.sort((a, b) => a - b);
+    let medianVal = 0;
+    let totalElements = expandedPoints.length;
+    if (totalElements > 0) {
+        let mid = Math.floor(totalElements / 2);
+        if (totalElements % 2 === 0) {
+            medianVal = (expandedPoints[mid - 1] + expandedPoints[mid]) / 2;
+        } else {
+            medianVal = expandedPoints[mid];
+        }
+    }
+
+    // 3. Lépések összeállítása tiszta szöveggel (nincs Markdown csillagozás)
+    let steps = [];
+
+    if (taskText.includes('átlag') || taskText.includes('számtani közép')) {
+        steps.push(`Számtani átlag ($\\overline{x}$): ${mean.toFixed(2)}`);
+    }
+
+    if (taskText.includes('módusz')) {
+        if (maxFreq === 1) {
+            steps.push(`Módusz ($Mo$): Az adatsokaságban a leggyakrabban előforduló adat. Itt minden érték egyszer fordul elő, ezért nincs módusz.`);
+        } else {
+            steps.push(`Módusz ($Mo$): Az adatsokaságban a leggyakrabban előforduló adat. ${sourceText} alapján a(z) ${modeList.join(', ')} érték fordul elő a legtöbbször (${maxFreq} alkalommal).`);
+        }
+    }
+
+    if (taskText.includes('medián')) {
+        let sortedStr = expandedPoints.join(', ');
+        let medianExplanation = "";
+        if (totalElements % 2 !== 0) {
+            let pos = (totalElements + 1) / 2;
+            medianExplanation = `Növekvő sorrendbe rendezve: [${sortedStr}]. Mivel az elemszám páratlan ($n = ${totalElements}$), a medián a nagyság szerint rendezett adatsor középső, azaz a $\\frac{${totalElements} + 1}{2} = ${pos}.$ eleme, ami a ${medianVal}-es érték.`;
+        } else {
+            let pos1 = totalElements / 2;
+            let pos2 = pos1 + 1;
+            medianExplanation = `Növekvő sorrendbe rendezve: [${sortedStr}]. Mivel az elemszám páros ($n = ${totalElements}$), a medián a két középső (${pos1}. és ${pos2}.) elem átlaga: $\\frac{${expandedPoints[pos1 - 1]} + ${expandedPoints[pos1]}}{2} = ${medianVal}$.`;
+        }
+        steps.push(`Medián ($Me$): ${medianExplanation}`);
+    }
+
+    // Segédfüggvények a terjedelemhez és a szóráshoz
+    const fmt = v => String(Number(v.toFixed(2)));                       // 2 tizedesre kerekít, a felesleges nullák nélkül
+    const par = v => (v < 0 ? `(${fmt(v)})` : fmt(v));                  // negatív szám zárójelben: 12 - (-3)
+    const isExact = v => Math.abs(v - Number(v.toFixed(2))) < 1e-9;
+    const eq = v => (isExact(v) ? '=' : '\\approx');                     // pontos érték: =, kerekített: ≈
+
+    if (taskText.includes('terjedel')) {   // 'terjedelem', 'terjedelmet', 'terjedelmét' is
+        const minVal = expandedPoints[0];
+        const maxVal = expandedPoints[expandedPoints.length - 1];
+        const range = maxVal - minVal;
+        steps.push(`Terjedelem ($R$): A legnagyobb és a legkisebb adat különbsége: $R = ${par(maxVal)} - ${par(minVal)} ${eq(range)} ${fmt(range)}$.`);
+    }
+
+    if (taskText.includes('szórás')) {
+        // Szórás (középiskolai, populációs képlet): az átlagtól való eltérések négyzetes átlagának négyzetgyöke
+        let sumSq = 0;
+        for (let key in freqMap) {
+            const item = freqMap[key];
+            sumSq += item.freq * Math.pow(item.val - mean, 2);
+        }
+        const sd = Math.sqrt(sumSq / count);
+        steps.push(`Szórás ($\\sigma$): Az adatok átlagtól való eltéréseinek négyzetes átlagából vett négyzetgyök: $\\sigma = \\sqrt{\\frac{\\sum (x_i - \\overline{x})^2}{n}}$. Az átlag $\\overline{x} ${eq(mean)} ${fmt(mean)}$, az eltérések négyzetösszege $\\sum (x_i - \\overline{x})^2 ${eq(sumSq)} ${fmt(sumSq)}$, az elemszám $n = ${count}$, ezért $\\sigma = \\sqrt{\\frac{${fmt(sumSq)}}{${count}}} ${eq(sd)} ${fmt(sd)}$.`);
+    }
+
+    if (steps.length === 0) {
+        steps.push(maxFreq === 1 ? `Módusz ($Mo$): nincs módusz, minden érték egyszer fordul elő.` : `Módusz ($Mo$): ${modeList.join(', ')} (${maxFreq} db).`);
+        let medianExplanation = "";
+        if (totalElements % 2 !== 0) {
+            let pos = (totalElements + 1) / 2;
+            medianExplanation = `Növekvő sorrendbe rendezve: [${expandedPoints.join(', ')}]. A(z) ${pos}. elem: ${medianVal}.`;
+        } else {
+            let pos1 = totalElements / 2;
+            medianExplanation = `Növekvő sorrendbe rendezve: [${expandedPoints.join(', ')}]. A két középső elem átlaga: ${medianVal}.`;
+        }
+        steps.push(`Medián ($Me$): ${medianExplanation}`);
+    }
+
+    let solutionText = '';
+    steps.forEach((step, index) => {
+        solutionText += `${index + 1}. ${step}\n`;
+    });
+
+    document.getElementById('taskSolution').value = solutionText.trim();
+    updatePreview();
+}
+
+            function updateChart() {
+                const tbody = document.getElementById('editableTableGrid');
+                if (!tbody) return;
+                const rows = tbody.querySelectorAll('tr');
+                if (rows.length === 0) return;
+
+                let labels = [];
+                let dataValues = [];
+
+                rows.forEach(tr => {
+                    const inputs = tr.querySelectorAll('input');
+                    if (inputs.length >= 2 && inputs[0].value.trim() !== '') {
+                        labels.push(inputs[0].value);
+                        dataValues.push(parseFloat(inputs[1].value) || 0);
+                    }
+                });
+
+                const canvas = document.getElementById('taskChart');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const chartType = document.getElementById('chartTypeSelect').value;
+
+                const backgroundColors = chartType === 'pie'
+                    ? ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0', '#9966ff']
+                    : 'rgba(54, 162, 235, 0.6)';
+
+                if (myChart) myChart.destroy();
+
+                myChart = new Chart(ctx, {
+                    type: chartType,
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Gyakoriság',
+                            data: dataValues,
+                            backgroundColor: backgroundColors,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: chartType === 'pie' ? {} : { y: { beginAtZero: true } }
+                    }
+                });
+            }
+
+            const taskDescriptionInput = document.getElementById('taskDescription');
+            const taskSolutionInput = document.getElementById('taskSolution');
+            const mathPreview = document.getElementById('mathPreview');
+
+            taskDescriptionInput.addEventListener('input', updatePreview);
+            taskSolutionInput.addEventListener('input', updatePreview);
+
+            function updatePreview() {
+                const text = taskDescriptionInput.value;
+                const solutionText = taskSolutionInput.value;
+                const tableHtml = getTableHtmlFromInputs();
+
+                let htmlContent = '';
+                if (text.trim() !== '') {
+                    htmlContent += `<div><strong>Feladat:</strong><br>${text.replace(/\n/g, '<br>')}</div>`;
+                }
+                htmlContent += tableHtml;
+                if (solutionText.trim() !== '') {
+                    htmlContent += `<div class="mt-3 pt-3 border-top text-success"><strong>Kidolgozott megoldás:</strong><br>${solutionText.replace(/\n/g, '<br>')}</div>`;
+                }
+
+                if (htmlContent === '' && document.getElementById('editableTableGrid').querySelectorAll('tr').length === 0) {
+                    mathPreview.innerHTML = '<span class="text-muted fst-italic">A feladat, táblázat, diagram,megoldás itt jelenik meg...</span>';
+                } else {
+                    mathPreview.innerHTML = htmlContent;
+                    if (window.MathJax && window.MathJax.typesetPromise) {
+                        window.MathJax.typesetPromise([mathPreview]).catch((err) => console.log(err));
+                    }
+                }
+                updateChart();
+            }
+
+            // ===== A feladat összeállítása az űrlap aktuális tartalmából =====
+            function collectRows() {
+                const rows = [];
+                document.querySelectorAll('#editableTableGrid tr').forEach(tr => {
+                    const inputs = tr.querySelectorAll('input');
+                    if (inputs.length >= 2 && inputs[0].value.trim() !== '') {
+                        rows.push([inputs[0].value.trim(), inputs[1].value.trim()]);
+                    }
+                });
+                return rows;
+            }
+
+            function currentTaskFromForm() {
+                const useTable = document.getElementById('useTableToggle').checked;
+                const rows = useTable ? collectRows() : [];
+
+                // A diagramot képként mentjük, így a diák oldalán (Chart.js nélkül) is megjelenik a PDF-ben
+                let chartImg = '';
+                const chartCanvas = document.getElementById('taskChart');
+                if (rows.length > 0 && chartCanvas && !document.getElementById('chartCard').classList.contains('d-none')) {
+                    chartImg = chartCanvas.toDataURL('image/png');
+                }
+
+                return {
+                    title: document.getElementById('taskTitle').value.trim(),
+                    description: document.getElementById('taskDescription').value,
+                    solution: document.getElementById('taskSolution').value,
+                    rows: rows,
+                    chartImg: chartImg,
+                    date: new Date().toLocaleDateString('hu-HU')
+                };
+            }
+
+            // ===== Mentés: a feladat bekerül a letöltési listába (altanar és aldiak oldalon is) =====
+            document.getElementById('taskForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                const task = currentTaskFromForm();
+                task.id = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+                const alertBox = document.getElementById('taskAlert');
+                try {
+                    const result = PdfTasks.saveTask(task);
+                    alertBox.className = 'alert alert-success';
+                    alertBox.textContent = result === 'updated'
+                        ? 'A(z) "' + task.title + '" feladat frissítve a letöltési listában.'
+                        : 'A(z) "' + task.title + '" feladat elmentve, a letöltési listában megjelent.';
+                    PdfTasks.renderList();
+                } catch (err) {
+                    alertBox.className = 'alert alert-danger';
+                    alertBox.textContent = 'A mentés nem sikerült (valószínűleg megtelt a böngésző tárhelye). Töröld a régi feladatokat a listából.';
+                }
+            });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
