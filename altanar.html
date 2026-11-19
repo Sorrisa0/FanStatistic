@@ -108,8 +108,8 @@
                         <table class="table table-sm table-bordered mb-0">
                             <thead>
                                 <tr>
-                                    <th>Érték / Intervallum</th>
-                                    <th>Gyakoriság (db)</th>
+                                    <th>Érték</th>
+                                    <th>Gyakoriság</th>
                                     <th style="width: 70px;" class="text-center">Törlés</th>
                                 </tr>
                             </thead>
@@ -124,7 +124,7 @@
                 <div class="card p-3 bg-light mb-3 d-none" id="dataSeriesCard">
                     <label for="dataSeries" class="form-label fw-bold mb-2">Adatsor a megoldás generálásához</label>
                     <input type="text" class="form-control" id="dataSeries" placeholder="Pl.: 3, 5, 5, 7, 10, 12">
-                    <div class="form-text">Az adatokat szóközzel, pontosvesszővel vagy vesszővel válaszd el (tizedesvessző is használható, pl. 2,5; 3,5). Ez a mező csak a megoldás kiszámításához kell, a feladat szövegébe az adatokat te írd be.</div>
+                    <div class="form-text">Az adatokat szóközzel, pontosvesszővel vagy vesszővel válaszd el (pl. 2,5; 3,5).</div>
                 </div>
 
                 <!-- Megoldás / Levezetés sorok -->
@@ -164,14 +164,14 @@
 
                 <!-- Gombok -->
                 <div class="d-flex gap-2 flex-wrap">
-                    <button type="submit" class="btn btn-primary">Feladat mentése adatbázisba</button>
+                    <button type="submit" class="btn btn-primary">Feladat mentése</button>
                 </div>
             </form>
         </div>
 
         <div class="card shadow-sm p-4 mb-5">
             <h3 class="mb-3">Mentett feladatok és megoldások (letöltési lista)</h3>
-            <p class="text-muted small">Itt jelennek meg a "Feladat mentése" gombbal elmentett feladatok. A diákok a saját felületükön ugyanezt a listát látják.</p>
+            <p class="text-muted small">Itt jelennek meg a "Feladat mentése" gombbal elmentett feladatok.</p>
             <div class="list-group" id="taskDownloadList" data-can-delete="true"></div>
         </div>
 
@@ -332,12 +332,12 @@ function generateAutomatedSolution() {
         // Adatforrás: a táblázat
         const tbody = document.getElementById('editableTableGrid');
         if (!tbody) {
-            alert('Előbb generálj táblázatot és add meg az adatokat!');
+            alert('Hiányzó táblázat!');
             return;
         }
         const rows = tbody.querySelectorAll('tr');
         if (rows.length === 0) {
-            alert('Nincsenek adatok a táblázatban! Generálj táblázatot, vagy kapcsold ki a táblázatot, és adj meg adatsort.');
+            alert('Nincsenek adatok a táblázatban!');
             return;
         }
 
@@ -360,7 +360,7 @@ function generateAutomatedSolution() {
         sourceText = 'Az adatsor';
         const raw = document.getElementById('dataSeries').value;
         if (raw.trim() === '') {
-            alert('Ehhez a táblázat nélküli feladathoz írd be az adatsort az "Adatsor" mezőbe (pl. 3, 5, 5, 7), vagy írd be a megoldást kézzel a megoldás mezőbe.');
+            alert('Táblázat nélküli feladatnál, megadható adatsor az "Adatsor" mezőbe (pl. 3, 5, 5, 7)');
             return;
         }
         const parsed = parseDataSeries(raw);

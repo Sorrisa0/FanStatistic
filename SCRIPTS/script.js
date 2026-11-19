@@ -61,7 +61,6 @@ form.addEventListener("submit", function(event){
         return;
     }
 
-    // Az üzenet mentése: a tanár az altanar.html "Beérkezett üzenetek" részében látja
     let messages = [];
     try {
         messages = JSON.parse(localStorage.getItem("contactMessages")) || [];

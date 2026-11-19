@@ -19,3 +19,44 @@ body{
 footer{
     margin-top:40px;
 }
+/* Telefon / kis kijelző */
+@media (max-width: 767.98px) {
+    /* Főoldali szlájdok: kisebb kép, kisebb és középre igazított felirat */
+    .carousel img {
+        height: 260px;
+    }
+
+    .carousel-caption {
+        top: auto !important;
+        bottom: 8% !important;
+        left: 5%;
+        right: 5%;
+        transform: none !important;
+    }
+
+        .carousel-caption h2 {
+            font-size: 1.15rem !important;
+        }
+
+            .carousel-caption h2 p {
+                font-size: 0.85rem;
+                margin: 0;
+            }
+
+    /* Fix szélességű beviteli csoportok: a teljes szélességet használják */
+    .input-group[style*="width"] {
+        width: 100% !important;
+    }
+}
+
+/* Érintőképernyő: a kártya nagyítása ne ragadjon be */
+@media (hover: none) {
+    .card:hover {
+        transform: none;
+    }
+}
+
+/* Az előnézetek széles táblázatai görgethetők legyenek */
+#mathPreview, #solPreview, #solTaskPreview {
+    overflow-x: auto;
+}
