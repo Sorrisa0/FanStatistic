@@ -94,13 +94,13 @@
 
                 <!-- Táblázatszerkesztő -->
                 <div class="card p-3 bg-light mb-3">
-                    <label class="form-label fw-bold mb-2">Adatsor táblázat szerkesztése</label>
+                    <label class="form-label fw-bold mb-2">Táblázat szerkesztése</label>
                     <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
                         <div class="input-group input-group-sm" style="width: 160px;">
-                            <span class="input-group-text">Kezdeti sorok</span>
+                            <span class="input-group-text">Kezdő sorok</span>
                             <input type="number" id="tableRows" class="form-control" value="1" min="1" max="15">
                         </div>
-                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="generateTableEditor()">Táblázat generálása</button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="generateTableEditor()">Táblázat készítése</button>
                         <button type="button" class="btn btn-outline-success btn-sm" onclick="addTableRow()">+ Új sor hozzáadása</button>
                     </div>
 
@@ -171,7 +171,6 @@
 
         <div class="card shadow-sm p-4 mb-5">
             <h3 class="mb-3">Mentett feladatok és megoldások (letöltési lista)</h3>
-            <p class="text-muted small">Itt jelennek meg a "Feladat mentése" gombbal elmentett feladatok.</p>
             <div class="list-group" id="taskDownloadList" data-can-delete="true"></div>
         </div>
 
@@ -260,7 +259,7 @@
             function appendRow(tbody, val1, val2) {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="text" class="form-control form-control-sm" value="${val1}" placeholder="Pl. 150-160" oninput="updatePreview()"></td>
+                    <td><input type="text" class="form-control form-control-sm" value="${val1}" placeholder="Pl. szó/szám/tartomány" oninput="updatePreview()"></td>
                     <td><input type="number" class="form-control form-control-sm" value="${val2}" placeholder="db" oninput="updatePreview()"></td>
                     <td class="text-center align-middle">
                         <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" onclick="deleteTableRow(this)" title="Sor törlése">×</button>
